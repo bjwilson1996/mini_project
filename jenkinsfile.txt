@@ -1,0 +1,32 @@
+pipeline {
+    agent any
+
+    environment {
+        SSH_KEY_ID = 'jenkins-nani-key'  // SSH credential ID in Jenkins
+    }
+
+    stages {
+        stage('Clone Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/your-username/your-repo.git'
+            }
+        }
+
+        stage('Terraform Apply') {
+            steps {
+                dir('terraform') {
+                    sh 'terraform init'
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
+
+        stage('Run Ansible') {
+            steps {
+                sshagent (credentials: [env.SSH_KEY_ID]) {
+                    sh 'ansible-playbook -i ansible/hosts ansible/playbook.yml'
+                }
+            }
+        }
+    }
+}
